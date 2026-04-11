@@ -1,0 +1,59 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  padding: 16px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.table tr:hover td {
+  background-color: var(--bg-surface-hover);
+}
+
+.amount {
+  font-weight: 600;
+}
+
+.income {
+  color: var(--accent-success);
+}
+
+.expense {
+  color: var(--accent-danger);
+}
+
+.emptyState {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
