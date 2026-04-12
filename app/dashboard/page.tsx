@@ -57,7 +57,7 @@ export default async function DashboardPage({
         </Card>
 
         {/* Seção de lista de transações com ação variável */}
-        <Card className={styles.chartCard} title={`Próximos Vencimentos e Lançamentos (${currentMonth}/${currentYear})`}>
+        <Card className={styles.chartCard} title={`Próximos Vencimentos e Transações (${currentMonth}/${currentYear})`}>
            <InteractiveActionList transactions={cashflow.transactions} />
         </Card>
       </div>

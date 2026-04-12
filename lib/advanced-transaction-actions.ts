@@ -4,15 +4,15 @@ import { prisma } from './prisma';
 import { revalidatePath } from 'next/cache';
 
 /**
- * Engine de Lançamento Unificado.
+ * Engine de Transação Unificada.
  * 
  * REGRAS DE NEGÓCIO PARA CARTÃO DE CRÉDITO:
- * 1. Lançamentos de cartão NÃO possuem status individual (Pago/Pendente).
+ * 1. Transações de cartão NÃO possuem status individual (Pago/Pendente).
  *    São sempre 'PENDING' até que a fatura inteira seja paga.
- * 2. A data do lançamento é cruzada com o dia de fechamento do cartão para
+ * 2. A data da transação é cruzada com o dia de fechamento do cartão para
  *    determinar em qual fatura (mês) a despesa será contabilizada:
- *    - Se dataLançamento < diaFechamento → fatura do MÊS CORRENTE
- *    - Se dataLançamento >= diaFechamento → fatura do PRÓXIMO MÊS
+ *    - Se dataTransação < diaFechamento → fatura do MÊS CORRENTE
+ *    - Se dataTransação >= diaFechamento → fatura do PRÓXIMO MÊS
  */
 export async function saveUnifiedTransaction(payload: any) {
   let user = await prisma.user.findFirst();

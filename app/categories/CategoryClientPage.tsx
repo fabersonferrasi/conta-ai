@@ -37,7 +37,7 @@ export function CategoryClientPage({ initialCategories }: { initialCategories: a
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>Gerencie os rótulos dos seus lançamentos.</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Gerencie os rótulos das suas transações.</p>
         <Button variant="primary" onClick={handleCreate}>+ Adicionar Categoria</Button>
       </div>
 
