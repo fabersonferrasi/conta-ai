@@ -40,7 +40,7 @@ export async function deleteAccount(id: string) {
   });
 
   if (transactionsCount > 0) {
-    throw new Error('Não é possível excluir uma conta que possui lançamentos associados.');
+    throw new Error('Não é possível excluir uma conta que possui transações associadas.');
   }
 
   await prisma.account.delete({

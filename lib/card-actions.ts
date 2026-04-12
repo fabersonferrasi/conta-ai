@@ -40,7 +40,7 @@ export async function deleteCreditCard(id: string) {
   });
 
   if (transactionsCount > 0) {
-    throw new Error('Não é possível excluir um cartão que possui lançamentos associados nas faturas.');
+    throw new Error('Não é possível excluir um cartão que possui transações associadas nas faturas.');
   }
 
   await prisma.creditCard.delete({

@@ -42,7 +42,7 @@ export function CardInvoiceRow({ card, total, count, status, dueDate, currentMon
             fontSize: '0.7rem', color: '#fff', background: brand.color, 
             padding: '2px 8px', borderRadius: '12px', fontWeight: 600 
           }}>
-            {count} {count === 1 ? 'lançamento' : 'lançamentos'}
+            {count} {count === 1 ? 'transação' : 'transações'}
           </span>
         </div>
       </td>

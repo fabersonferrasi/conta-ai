@@ -31,7 +31,7 @@ export function InteractiveActionList({ transactions }: { transactions: any[] })
   };
 
   if (transactions.length === 0) {
-    return <p style={{color: 'var(--text-tertiary)'}}>Nenhum lançamento no radar.</p>;
+    return <p style={{color: 'var(--text-tertiary)'}}>Nenhuma transação no radar.</p>;
   }
 
   return (
@@ -88,17 +88,17 @@ export function InteractiveActionList({ transactions }: { transactions: any[] })
         </div>
       ))}
 
-      <Modal isOpen={!!deleteModalOpenFor} onClose={() => setDeleteModalOpenFor(null)} title="Excluir Lançamento">
+      <Modal isOpen={!!deleteModalOpenFor} onClose={() => setDeleteModalOpenFor(null)} title="Excluir Transação">
         {deleteModalOpenFor && (
           <>
             <p style={{ marginBottom: '24px', color: 'var(--text-primary)' }}>
-              Tem certeza que deseja excluir o lançamento <strong>{deleteModalOpenFor.description}</strong>?
+              Tem certeza que deseja excluir a transação <strong>{deleteModalOpenFor.description}</strong>?
             </p>
 
             {deleteModalOpenFor.installmentGroupId && (
               <div style={{ padding: '12px', background: 'var(--bg-surface-hover)', borderRadius: '8px', marginBottom: '24px' }}>
                 <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
-                  ℹ️ Este lançamento faz parte de um parcelamento ({deleteModalOpenFor.installmentNum}/{deleteModalOpenFor.totalInstallments}).
+                  ℹ️ Esta transação faz parte de um parcelamento ({deleteModalOpenFor.installmentNum}/{deleteModalOpenFor.totalInstallments}).
                 </p>
               </div>
             )}

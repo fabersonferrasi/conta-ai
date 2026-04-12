@@ -121,15 +121,15 @@ export function TransactionTableRow({ tx, categories, accounts, cards }: Props) 
         transaction={tx} 
       />
 
-      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Excluir Lançamento">
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Excluir Transação">
         <p style={{ marginBottom: '24px', color: 'var(--text-primary)' }}>
-          Tem certeza que deseja excluir o lançamento <strong>{tx.description}</strong>?
+          Tem certeza que deseja excluir a transação <strong>{tx.description}</strong>?
         </p>
 
         {hasInstallments && (
           <div style={{ padding: '12px', background: 'var(--bg-surface-hover)', borderRadius: '8px', marginBottom: '24px' }}>
             <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
-              ℹ️ Este lançamento faz parte de um parcelamento ({tx.installmentNum}/{tx.totalInstallments}).
+              ℹ️ Esta transação faz parte de um parcelamento ({tx.installmentNum}/{tx.totalInstallments}).
             </p>
           </div>
         )}
@@ -155,7 +155,7 @@ export function TransactionTableRow({ tx, categories, accounts, cards }: Props) 
         </div>
       </Modal>
 
-      <Modal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Editar Lançamento">
+      <Modal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Editar Transação">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <label style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>Data</label>

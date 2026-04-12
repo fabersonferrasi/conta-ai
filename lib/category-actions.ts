@@ -41,7 +41,7 @@ export async function deleteCategory(id: string) {
   });
 
   if (transactionsCount > 0) {
-    throw new Error('Não é possível excluir uma categoria que possui lançamentos associados.');
+    throw new Error('Não é possível excluir uma categoria que possui transações associadas.');
   }
 
   await prisma.category.delete({

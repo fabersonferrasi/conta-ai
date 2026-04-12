@@ -20,7 +20,7 @@ export default async function AppLayout({ children, title }: { children: React.R
             <li className={styles.navItem}><a href="/dashboard">Visão Geral</a></li>
             <li className={styles.navItem}><a href="/accounts">Contas Correntes</a></li>
             <li className={styles.navItem}><a href="/cards">Cartões de Crédito</a></li>
-            <li className={styles.navItem}><a href="/transactions">Lançamentos</a></li>
+            <li className={styles.navItem}><a href="/transactions">Transações</a></li>
             <li className={styles.navItem}><a href="/categories">Categorias</a></li>
             <li className={styles.navItem}><a href="/reports">Relatórios</a></li>
           </ul>

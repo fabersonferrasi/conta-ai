@@ -153,7 +153,7 @@ export async function reopenInvoice(cardId: string, year: number, month: number)
 }
 
 // Ajustar valor da fatura (SOMENTE se fatura OPEN)
-// O lançamento é criado DENTRO do mês da fatura, não na data de hoje
+// A transação é criada DENTRO do mês da fatura, não na data de hoje
 export async function adjustInvoice(cardId: string, amount: number, description: string, year: number, month: number) {
   const invoice = await getCardInvoice(cardId, year, month);
   
@@ -164,7 +164,7 @@ export async function adjustInvoice(cardId: string, amount: number, description:
   const user = await prisma.user.findFirst();
   if (!user) throw new Error("Usuário não encontrado.");
 
-  // Data do lançamento: dia 15 do mês da fatura (dentro do período)
+  // Data da transação: dia 15 do mês da fatura (dentro do período)
   const adjustDate = new Date(year, month - 1, 15, 12, 0, 0);
 
   await prisma.transaction.create({

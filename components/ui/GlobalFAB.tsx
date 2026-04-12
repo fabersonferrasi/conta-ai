@@ -55,7 +55,7 @@ export function GlobalFAB({ accounts, categories, cards }: { accounts: any[], ca
             transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
             flexShrink: 0,
           }}
-          title="Novo Lançamento"
+          title="Nova transação"
         >
           <Plus size={24} strokeWidth={2.5} />
         </button>
