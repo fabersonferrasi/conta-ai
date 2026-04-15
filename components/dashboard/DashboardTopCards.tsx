@@ -9,7 +9,7 @@ type DashboardTopCardsProps = {
   currentBalance: number;
   incomes: { total: number; paid: number; pending: number };
   expenses: { total: number; paid: number; pending: number };
-  creditCards: { total: number; cards: { id: string; name: string; balance: number; icon?: string }[] };
+  creditCards: { total: number; cards: { id: string; name: string; balance: number; icon?: string | null }[] };
   accounts: any[];
   selectedAccountId?: string;
 };

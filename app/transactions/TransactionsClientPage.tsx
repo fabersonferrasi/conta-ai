@@ -11,6 +11,7 @@ import {
   MoreVertical, Pencil, Trash2, X, AlertTriangle
 } from 'lucide-react';
 import { deleteTransaction, updateTransaction } from '../../lib/transaction-actions';
+import { QuickPayModal } from '../../components/transactions/QuickPayModal';
 
 type FilterType = 'ALL' | 'INCOME' | 'EXPENSE' | 'CARD';
 type SortField = 'date' | 'amount' | 'description';
@@ -26,13 +27,32 @@ interface Props {
   summary: { currentBalance: number; incomeTotal: number; expenseTotal: number; monthlyBalance: number };
 }
 
+const toDateInputValue = (value: string | Date | null | undefined) => {
+  if (!value) return '';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().split('T')[0];
+};
+
+const parseCurrencyInput = (value: string) => {
+  const sanitized = value.trim().replace(/\s/g, '');
+  if (!sanitized) return NaN;
+  if (sanitized.includes(',') && sanitized.includes('.')) {
+    return Number(sanitized.replace(/\./g, '').replace(',', '.'));
+  }
+  return Number(sanitized.replace(',', '.'));
+};
+
+const isSettleableTransaction = (tx: any) => tx?.type === 'INCOME' || tx?.type === 'EXPENSE';
+
 /* ────────────────────────── ACTION MENU ────────────────────────── */
 function ActionMenu({
   tx,
+  onSettle,
   onEdit,
   onDelete,
 }: {
   tx: any;
+  onSettle?: (tx: any) => void;
   onEdit: (tx: any) => void;
   onDelete: (tx: any) => void;
 }) {
@@ -117,6 +137,27 @@ function ActionMenu({
         pointerEvents: menuPosition ? 'auto' : 'none',
       }}
     >
+      {isSettleableTransaction(tx) && onSettle && (
+        <>
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); setOpen(false); onSettle(tx); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              width: '100%', padding: '12px 16px', border: 'none',
+              background: 'none', cursor: 'pointer',
+              color: 'var(--text-primary)', fontSize: '0.875rem', fontWeight: 500,
+              transition: 'background 0.1s',
+            }}
+            onMouseOver={e => (e.currentTarget.style.background = 'var(--bg-surface-hover)')}
+            onMouseOut={e => (e.currentTarget.style.background = 'none')}
+          >
+            <CheckCircle2 size={15} color={tx.type === 'INCOME' ? '#10b981' : '#f59e0b'} />
+            {tx.status === 'COMPLETED' ? 'Editar baixa' : 'Dar baixa'}
+          </button>
+          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0 12px' }} />
+        </>
+      )}
       <button
         type="button"
         onClick={e => { e.stopPropagation(); setOpen(false); onEdit(tx); }}
@@ -200,30 +241,61 @@ function EditTransactionModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const isTransfer = tx.type === 'TRANSFER';
+  const isSeries = Boolean(tx.installmentGroupId && tx.totalInstallments > 1);
+  const color = tx.type === 'INCOME' ? '#10b981' : tx.type === 'EXPENSE' ? '#ef4444' : '#3b82f6';
+  const typeLabel = tx.type === 'INCOME' ? 'Receita' : tx.type === 'EXPENSE' ? 'Despesa' : 'Transferência';
+
   const [description, setDescription] = useState(tx.description || '');
-  const [amount, setAmount] = useState(String(tx.amount));
+  const [amount, setAmount] = useState(Number(tx.amount || 0).toFixed(2));
   const [categoryId, setCategoryId] = useState(tx.categoryId || '');
   const [accountId, setAccountId] = useState(tx.accountId || '');
+  const [destinationAccountId, setDestinationAccountId] = useState(tx.destinationAccountId || '');
   const [status, setStatus] = useState(tx.status || 'PENDING');
-  const [date, setDate] = useState(
-    tx.date ? new Date(tx.date).toISOString().split('T')[0] : ''
-  );
+  const [date, setDate] = useState(toDateInputValue(tx.date));
+  const [tags, setTags] = useState(tx.tags || '');
+  const [observation, setObservation] = useState(tx.observation || '');
+  const [isFixed, setIsFixed] = useState(Boolean(tx.isFixed));
+  const [isRepeated, setIsRepeated] = useState(Boolean(tx.repeatFrequency) && !tx.isFixed);
+  const [repeatFrequency, setRepeatFrequency] = useState(tx.repeatFrequency || 'MONTHS');
   const [isLoading, setIsLoading] = useState(false);
   const [scope, setScope] = useState<'SINGLE' | 'FUTURE'>('SINGLE');
 
-  const isInstallment = tx.installmentGroupId && tx.totalInstallments > 1;
-  const color = tx.type === 'INCOME' ? '#10b981' : '#ef4444';
-
   const handleSave = async () => {
+    const parsedAmount = parseCurrencyInput(amount);
+    if (!description.trim()) {
+      alert('Informe a descrição da transação.');
+      return;
+    }
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      alert('Informe um valor válido para a transação.');
+      return;
+    }
+    if (!date) {
+      alert('Selecione a data da transação.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       await updateTransaction(tx.id, {
-        description,
-        amount: parseFloat(amount),
-        categoryId: categoryId || null,
+        description: description.trim(),
+        amount: parsedAmount,
+        categoryId: isTransfer ? null : (categoryId || null),
         accountId: accountId || null,
-        status,
-        date: date ? new Date(date) : undefined,
+        destinationAccountId: isTransfer ? (destinationAccountId || null) : null,
+        status: isTransfer ? tx.status : status,
+        date: new Date(`${date}T12:00:00Z`),
+        tags: isTransfer ? null : (tags.trim() || null),
+        observation: isTransfer ? null : (observation.trim() || null),
+        isFixed: isTransfer ? false : isFixed,
+        repeatFrequency: isTransfer
+          ? null
+          : isFixed
+            ? (repeatFrequency || tx.repeatFrequency || 'MONTHS')
+            : isRepeated
+              ? repeatFrequency
+              : null,
       }, scope);
       onSaved();
       onClose();
@@ -250,7 +322,7 @@ function EditTransactionModal({
           borderRadius: '20px',
           boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
           width: '100%',
-          maxWidth: '500px',
+          maxWidth: '640px',
           margin: '16px',
           overflow: 'hidden',
           animation: 'modalSlideIn 0.2s ease',
@@ -273,10 +345,10 @@ function EditTransactionModal({
             </div>
             <div>
               <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
-                Editar Transação
+                Editar transação
               </h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                {tx.type === 'INCOME' ? '💚 Receita' : '❤️ Despesa'}
+                {typeLabel}
               </span>
             </div>
           </div>
@@ -289,13 +361,12 @@ function EditTransactionModal({
         </div>
 
         {/* Body */}
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', maxHeight: '78vh', overflowY: 'auto' }}>
           {/* Valor */}
           <div>
             <label style={labelStyle}>Valor (R$)</label>
             <input
-              type="number"
-              step="0.01"
+              type="text"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               style={{ ...inputStyle, fontSize: '1.4rem', fontWeight: 700, color }}
@@ -309,6 +380,7 @@ function EditTransactionModal({
               type="text"
               value={description}
               onChange={e => setDescription(e.target.value)}
+              placeholder="Descreva a transação"
               style={inputStyle}
             />
           </div>
@@ -325,31 +397,32 @@ function EditTransactionModal({
               />
             </div>
 
-            {/* Status */}
-            <div>
-              <label style={labelStyle}>Status</label>
-              <select value={status} onChange={e => setStatus(e.target.value)} style={inputStyle}>
-                <option value="COMPLETED">{tx.type === 'INCOME' ? 'Recebida' : 'Pago'}</option>
-                <option value="PENDING">{tx.type === 'INCOME' ? 'Não recebida' : 'Pendente'}</option>
-              </select>
-            </div>
+            {!isTransfer && (
+              <div>
+                <label style={labelStyle}>Status</label>
+                <select value={status} onChange={e => setStatus(e.target.value)} style={inputStyle}>
+                  <option value="COMPLETED">{tx.type === 'INCOME' ? 'Recebida' : 'Paga'}</option>
+                  <option value="PENDING">{tx.type === 'INCOME' ? 'Não recebida' : 'Pendente'}</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            {/* Categoria */}
-            <div>
-              <label style={labelStyle}>Categoria</label>
-              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={inputStyle}>
-                <option value="">Sem categoria</option>
-                {categories.map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                ))}
-              </select>
-            </div>
+            {!isTransfer && (
+              <div>
+                <label style={labelStyle}>Categoria</label>
+                <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={inputStyle}>
+                  <option value="">Sem categoria</option>
+                  {categories.map((c: any) => (
+                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            {/* Conta */}
             <div>
-              <label style={labelStyle}>Conta</label>
+              <label style={labelStyle}>{isTransfer ? 'Conta de origem' : 'Conta'}</label>
               <select value={accountId} onChange={e => setAccountId(e.target.value)} style={inputStyle}>
                 <option value="">Sem conta</option>
                 {accounts.map((a: any) => (
@@ -359,15 +432,111 @@ function EditTransactionModal({
             </div>
           </div>
 
-          {/* Escopo para parcelados */}
-          {isInstallment && (
+          {isTransfer && (
+            <div>
+              <label style={labelStyle}>Conta de destino</label>
+              <select value={destinationAccountId} onChange={e => setDestinationAccountId(e.target.value)} style={inputStyle}>
+                <option value="">Sem conta de destino</option>
+                {accounts
+                  .filter((a: any) => a.id !== accountId)
+                  .map((a: any) => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+              </select>
+            </div>
+          )}
+
+          {!isTransfer && (
+            <div style={{
+              background: 'var(--bg-surface-hover)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '14px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label style={labelStyle}>Tags</label>
+                  <input
+                    type="text"
+                    value={tags}
+                    onChange={e => setTags(e.target.value)}
+                    placeholder="Ex: mercado, casa"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Observação</label>
+                  <input
+                    type="text"
+                    value={observation}
+                    onChange={e => setObservation(e.target.value)}
+                    placeholder="Detalhes extras"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <label style={switchCardStyle}>
+                  <div>
+                    <span style={switchTitleStyle}>{tx.type === 'INCOME' ? 'Receita fixa' : 'Despesa fixa'}</span>
+                    <span style={switchHintStyle}>Mantém a recorrência contínua.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isFixed}
+                    onChange={e => {
+                      const checked = e.target.checked;
+                      setIsFixed(checked);
+                      if (checked) setIsRepeated(false);
+                    }}
+                    style={{ width: '18px', height: '18px' }}
+                  />
+                </label>
+
+                <label style={switchCardStyle}>
+                  <div>
+                    <span style={switchTitleStyle}>Repetição</span>
+                    <span style={switchHintStyle}>Permite ajustar a frequência.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isRepeated}
+                    onChange={e => {
+                      const checked = e.target.checked;
+                      setIsRepeated(checked);
+                      if (checked) setIsFixed(false);
+                    }}
+                    style={{ width: '18px', height: '18px' }}
+                  />
+                </label>
+              </div>
+
+              {isRepeated && (
+                <div>
+                  <label style={labelStyle}>Frequência</label>
+                  <select value={repeatFrequency} onChange={e => setRepeatFrequency(e.target.value)} style={inputStyle}>
+                    <option value="DAYS">Dias</option>
+                    <option value="WEEKS">Semanas</option>
+                    <option value="MONTHS">Meses</option>
+                    <option value="YEARS">Anos</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isSeries && (
             <div style={{
               padding: '14px 16px', borderRadius: '10px',
               background: '#f59e0b10', border: '1px solid #f59e0b30',
               display: 'flex', flexDirection: 'column', gap: '10px',
             }}>
               <p style={{ margin: 0, fontSize: '0.82rem', color: '#f59e0b', fontWeight: 600 }}>
-                ⚠️ Esta transação faz parte de {tx.totalInstallments} parcelas. O que deseja atualizar?
+                Esta transação faz parte de uma série com {tx.totalInstallments} ocorrências. O que deseja atualizar?
               </p>
               <div style={{ display: 'flex', gap: '10px' }}>
                 {(['SINGLE', 'FUTURE'] as const).map(s => (
@@ -409,7 +578,7 @@ function EditTransactionModal({
                 opacity: isLoading ? 0.7 : 1,
               }}
             >
-              {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+              {isLoading ? 'Salvando...' : 'Salvar alterações'}
             </button>
           </div>
         </div>
@@ -555,6 +724,7 @@ export function TransactionsClientPage({ transactions, accounts, cards, categori
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const [editingTx, setEditingTx] = useState<any>(null);
+  const [settlingTx, setSettlingTx] = useState<any>(null);
   const [deletingTx, setDeletingTx] = useState<any>(null);
 
   const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1097,11 +1267,32 @@ export function TransactionsClientPage({ transactions, accounts, cards, categori
 
                       {/* Ações (3 pontos) */}
                       <td style={{ ...tdStyle, textAlign: 'center' }}>
-                        <ActionMenu
-                          tx={tx}
-                          onEdit={setEditingTx}
-                          onDelete={setDeletingTx}
-                        />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                          {isSettleableTransaction(tx) && tx.status !== 'COMPLETED' && (
+                            <button
+                              type="button"
+                              onClick={e => { e.stopPropagation(); setSettlingTx(tx); }}
+                              style={{
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px 10px',
+                                background: tx.type === 'INCOME' ? '#10b981' : '#f59e0b',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                fontWeight: 700,
+                                fontSize: '0.72rem',
+                              }}
+                            >
+                              Baixar
+                            </button>
+                          )}
+                          <ActionMenu
+                            tx={tx}
+                            onSettle={isSettleableTransaction(tx) ? setSettlingTx : undefined}
+                            onEdit={setEditingTx}
+                            onDelete={setDeletingTx}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1133,6 +1324,14 @@ export function TransactionsClientPage({ transactions, accounts, cards, categori
       </div>
 
       {/* ── MODAIS ── */}
+      {settlingTx && (
+        <QuickPayModal
+          transaction={settlingTx}
+          isOpen={Boolean(settlingTx)}
+          onClose={() => setSettlingTx(null)}
+          onSettled={refreshPage}
+        />
+      )}
       {editingTx && (
         <EditTransactionModal
           tx={editingTx}
@@ -1174,6 +1373,32 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--text-primary)',
   outline: 'none',
   boxSizing: 'border-box',
+};
+
+const switchCardStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '16px',
+  padding: '14px',
+  borderRadius: '12px',
+  border: '1px solid var(--border-subtle)',
+  background: 'var(--bg-surface)',
+  cursor: 'pointer',
+};
+
+const switchTitleStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '0.9rem',
+  fontWeight: 600,
+  color: 'var(--text-primary)',
+};
+
+const switchHintStyle: React.CSSProperties = {
+  display: 'block',
+  marginTop: '4px',
+  fontSize: '0.78rem',
+  color: 'var(--text-tertiary)',
 };
 
 const thStyle: React.CSSProperties = {

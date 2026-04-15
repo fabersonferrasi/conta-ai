@@ -2,6 +2,7 @@
 
 import { prisma } from './prisma';
 import { revalidatePath } from 'next/cache';
+import { ensureDefaultData, getOrCreateDefaultUser } from './default-data';
 
 // Buscar dados completos de fatura de um cartão para um mês específico
 export async function getCardInvoice(cardId: string, year: number, month: number) {
@@ -74,8 +75,7 @@ export async function getCardInvoice(cardId: string, year: number, month: number
 
 // Buscar resumo de todos os cartões para a visão geral
 export async function getAllCardsInvoiceSummary(year: number, month: number) {
-  const user = await prisma.user.findFirst();
-  if (!user) throw new Error("Usuário não encontrado.");
+  const user = await ensureDefaultData();
 
   const cards = await prisma.creditCard.findMany({ where: { userId: user.id } });
   
@@ -161,8 +161,7 @@ export async function adjustInvoice(cardId: string, amount: number, description:
     throw new Error(`Não é possível ajustar uma fatura ${invoice.invoiceStatus === 'PAID' ? 'paga' : 'fechada'}. Reabra a fatura primeiro.`);
   }
 
-  const user = await prisma.user.findFirst();
-  if (!user) throw new Error("Usuário não encontrado.");
+  const user = await getOrCreateDefaultUser();
 
   // Data da transação: dia 15 do mês da fatura (dentro do período)
   const adjustDate = new Date(year, month - 1, 15, 12, 0, 0);
@@ -191,8 +190,7 @@ export async function createReversal(cardId: string, amount: number, description
     throw new Error(`Não é possível lançar estorno em fatura ${invoice.invoiceStatus === 'PAID' ? 'paga' : 'fechada'}. Reabra a fatura primeiro.`);
   }
 
-  const user = await prisma.user.findFirst();
-  if (!user) throw new Error("Usuário não encontrado.");
+  const user = await getOrCreateDefaultUser();
 
   const reversalDate = new Date(year, month - 1, 15, 12, 0, 0);
 

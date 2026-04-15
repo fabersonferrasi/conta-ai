@@ -11,12 +11,15 @@ import DashboardTopCards from '../../components/dashboard/DashboardTopCards';
 import { AccountFilter } from '../../components/ui/AccountFilter';
 import { DailyProjectionTable } from '../../components/dashboard/DailyProjectionTable';
 import { MonthlyNetBalanceCard } from '../../components/dashboard/MonthlyNetBalanceCard';
+import { ensureDefaultData } from '../../lib/default-data';
 
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams: { month?: string; year?: string; accountId?: string };
 }) {
+  await ensureDefaultData();
+
   const currentYear = searchParams.year ? parseInt(searchParams.year, 10) : new Date().getFullYear();
   const currentMonth = searchParams.month ? parseInt(searchParams.month, 10) : new Date().getMonth() + 1;
   const accountId = searchParams.accountId;

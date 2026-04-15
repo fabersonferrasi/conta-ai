@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from './prisma';
+import { getOrCreateDefaultUser } from './default-data';
 
 export async function getCategories() {
   return await prisma.category.findMany({
@@ -10,8 +11,7 @@ export async function getCategories() {
 }
 
 export async function createCategory(data: { name: string; color: string; icon: string }) {
-  const user = await prisma.user.findFirst();
-  if (!user) throw new Error("Usuário não encontrado.");
+  const user = await getOrCreateDefaultUser();
 
   await prisma.category.create({
     data: {

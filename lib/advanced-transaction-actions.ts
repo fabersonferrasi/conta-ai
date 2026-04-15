@@ -2,6 +2,7 @@
 
 import { prisma } from './prisma';
 import { revalidatePath } from 'next/cache';
+import { getOrCreateDefaultUser } from './default-data';
 
 /**
  * Engine de Transação Unificada.
@@ -15,8 +16,7 @@ import { revalidatePath } from 'next/cache';
  *    - Se dataTransação >= diaFechamento → fatura do PRÓXIMO MÊS
  */
 export async function saveUnifiedTransaction(payload: any) {
-  let user = await prisma.user.findFirst();
-  if (!user) throw new Error("Usuário não encontrado.");
+  const user = await getOrCreateDefaultUser();
 
   const {
     flowType, amount, date, description, categoryId, accountId, creditCardId, destinationAccountId, 

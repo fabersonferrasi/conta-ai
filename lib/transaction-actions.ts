@@ -2,6 +2,7 @@
 
 import { prisma } from './prisma';
 import { revalidatePath } from 'next/cache';
+import { ensureDefaultData, getOrCreateDefaultUser } from './default-data';
 
 export async function createInstallments(formData: FormData) {
   const description = formData.get('description') as string;
@@ -22,10 +23,7 @@ export async function createInstallments(formData: FormData) {
   const groupId = crypto.randomUUID();
 
   // Associar ao Usuário atual Padrão
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({ data: { email: `t+${Date.now()}@t.com`, name: 'Usuário', password: '123' }});
-  }
+  const user = await getOrCreateDefaultUser();
 
   const transactions = [];
   const baseDate = new Date(); // Mês atual
@@ -56,39 +54,7 @@ export async function createInstallments(formData: FormData) {
 }
 
 export async function seedAccountsIfEmpty() {
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({ data: { email: `padrao@conta.ai`, name: 'Padrão', password: '123' }});
-  }
-
-  const accounts = await prisma.account.count();
-  if (accounts === 0) {
-    await prisma.account.create({
-      data: { userId: user.id, name: 'Conta Corrente Padrão', balance: 5000.00 }
-    });
-  }
-
-  const cards = await prisma.creditCard.count();
-  if (cards === 0) {
-    await prisma.creditCard.create({
-      data: { userId: user.id, name: 'Cartão Master', limit: 10000.00, closingDay: 5, dueDay: 12 }
-    });
-  }
-
-  const baseCategories = [
-    { name: 'Moradia', color: '#3b82f6' },
-    { name: 'Alimentação', color: '#f59e0b' },
-    { name: 'Transporte', color: '#10b981' },
-    { name: 'Lazer', color: '#8b5cf6' },
-    { name: 'Saúde', color: '#ef4444' }
-  ];
-
-  const categories = await prisma.category.count();
-  if (categories === 0) {
-    await prisma.category.createMany({
-       data: baseCategories.map(c => ({ ...c, userId: user.id }))
-    });
-  }
+  await ensureDefaultData();
 }
 
 export async function payExactTransaction(id: string, exactAmount: number, exactDate?: Date) {

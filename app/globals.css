@@ -70,14 +70,34 @@ html, body {
   height: 100%;
 }
 
+html {
+  background-color: var(--bg-base);
+  overscroll-behavior-y: none;
+}
+
 body {
+  min-height: 100dvh;
   background-color: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 28%);
+  pointer-events: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -94,6 +114,16 @@ a {
 
 button, input, select, textarea {
   font-family: inherit;
+}
+
+html[data-display-mode='standalone'] body {
+  min-height: 100svh;
+}
+
+html[data-display-mode='standalone'] body::before {
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.18), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.12), transparent 30%);
 }
 
 /* Utilitários globais úteis */

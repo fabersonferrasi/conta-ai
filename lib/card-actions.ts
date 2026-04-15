@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from './prisma';
+import { getOrCreateDefaultUser } from './default-data';
 
 export async function getCreditCards() {
   return await prisma.creditCard.findMany({
@@ -10,8 +11,7 @@ export async function getCreditCards() {
 }
 
 export async function createCreditCard(data: { name: string; limit: number; closingDay: number; dueDay: number; icon?: string }) {
-  const user = await prisma.user.findFirst();
-  if (!user) throw new Error("Usuário não encontrado.");
+  const user = await getOrCreateDefaultUser();
 
   await prisma.creditCard.create({
     data: {

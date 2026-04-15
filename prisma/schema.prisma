@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
 }
 
 model User {
@@ -19,6 +18,7 @@ model User {
   creditCards  CreditCard[]
   transactions Transaction[]
   categories   Category[]
+  budgets      Budget[]
 }
 
 model Account {
@@ -59,6 +59,7 @@ model Category {
 
   user      User     @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  budgets   Budget[]
 }
 
 model Transaction {
@@ -95,4 +96,18 @@ model Transaction {
   account    Account?    @relation(fields: [accountId], references: [id])
   creditCard CreditCard? @relation(fields: [creditCardId], references: [id])
   category   Category?   @relation(fields: [categoryId], references: [id])
+}
+
+model Budget {
+  id         String @id @default(uuid())
+  userId     String
+  categoryId String
+  month      Int
+  year       Int
+  amount     Float
+
+  user       User     @relation(fields: [userId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId, month, year])
 }

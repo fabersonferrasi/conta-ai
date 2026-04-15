@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from './prisma';
+import { getOrCreateDefaultUser } from './default-data';
 
 export async function getAccounts() {
   return await prisma.account.findMany({
@@ -10,8 +11,7 @@ export async function getAccounts() {
 }
 
 export async function createAccount(data: { name: string; bank: string; balance: number }) {
-  const user = await prisma.user.findFirst();
-  if (!user) throw new Error("Usuário não encontrado.");
+  const user = await getOrCreateDefaultUser();
 
   await prisma.account.create({
     data: {
