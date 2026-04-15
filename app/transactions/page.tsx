@@ -42,7 +42,7 @@ export default async function TransactionsPage({
     .reduce((acc: number, t: TotalsTransaction) => acc + t.amount, 0);
 
   // Saldo atual (soma de todas as contas)
-  const currentBalance = accounts.reduce((acc, a) => acc + a.balance, 0);
+  const currentBalance = accounts.reduce((acc: number, a: { balance: number }) => acc + a.balance, 0);
   const monthlyBalance = incomeTotal - expenseTotal;
 
   // Serializar para o client
