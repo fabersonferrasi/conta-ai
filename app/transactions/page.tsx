@@ -4,6 +4,11 @@ import { prisma } from '../../lib/prisma';
 import { seedAccountsIfEmpty } from '../../lib/transaction-actions';
 import { TransactionsClientPage } from './TransactionsClientPage';
 
+type TotalsTransaction = {
+  type: string;
+  amount: number;
+};
+
 export default async function TransactionsPage({
   searchParams,
 }: {
@@ -29,12 +34,12 @@ export default async function TransactionsPage({
 
   // Calcular totais do mês
   const incomeTotal = allTransactions
-    .filter(t => t.type === 'INCOME')
-    .reduce((acc, t) => acc + t.amount, 0);
+    .filter((t: TotalsTransaction) => t.type === 'INCOME')
+    .reduce((acc: number, t: TotalsTransaction) => acc + t.amount, 0);
 
   const expenseTotal = allTransactions
-    .filter(t => t.type === 'EXPENSE')
-    .reduce((acc, t) => acc + t.amount, 0);
+    .filter((t: TotalsTransaction) => t.type === 'EXPENSE')
+    .reduce((acc: number, t: TotalsTransaction) => acc + t.amount, 0);
 
   // Saldo atual (soma de todas as contas)
   const currentBalance = accounts.reduce((acc, a) => acc + a.balance, 0);
